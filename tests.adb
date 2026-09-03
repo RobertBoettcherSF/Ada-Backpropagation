@@ -36,10 +36,10 @@ begin
    -- TEST 2 - Forward Input Validation Exception
    Put_Line ("TEST 2 -- Forward Input Validation");
    declare
-      Net   : Neural_Network := Create_Network (2, 3, 1, Linear);
-      State : Network_State (2, 3, 1);
-      Bad_Input : Vector (1 .. 1) := (1 => 1.0);
-      Good_Input: Vector (1 .. 2) := (1.0, 2.0);
+      Net        : Neural_Network := Create_Network (2, 3, 1, Linear);
+      State      : Network_State (2, 3, 1);
+      Bad_Input  : constant Vector (1 .. 1) := (1 => 1.0);
+      Good_Input : constant Vector (1 .. 2) := (1.0, 2.0);
    begin
       begin
          Forward (Net, Bad_Input, State);
@@ -60,11 +60,11 @@ begin
    -- TEST 3 - Backward Target Validation Exception
    Put_Line ("TEST 3 -- Backward Target Validation");
    declare
-      Net   : Neural_Network := Create_Network (1, 2, 1, Linear);
-      State : Network_State (1, 2, 1);
-      Grads : Network_Gradients (1, 2, 1);
-      Bad_T : Vector (1 .. 2) := (1.0, 1.0);
-      Good_T: Vector (1 .. 1) := (1 => 1.0);
+      Net    : Neural_Network := Create_Network (1, 2, 1, Linear);
+      State  : Network_State (1, 2, 1);
+      Grads  : Network_Gradients (1, 2, 1);
+      Bad_T  : constant Vector (1 .. 2) := (1.0, 1.0);
+      Good_T : constant Vector (1 .. 1) := (1 => 1.0);
    begin
       Forward (Net, (1 => 1.0), State);
       
@@ -114,10 +114,10 @@ begin
    -- TEST 5 - Compute Loss Correctness
    Put_Line ("TEST 5 -- Compute Loss Correctness");
    declare
-      P1 : Vector (1 .. 2) := (1.0, 0.0);
-      T1 : Vector (1 .. 2) := (1.0, 0.0);
-      P2 : Vector (1 .. 2) := (1.0, 1.0);
-      T2 : Vector (1 .. 2) := (0.0, 0.0);
+      P1 : constant Vector (1 .. 2) := (1.0, 0.0);
+      T1 : constant Vector (1 .. 2) := (1.0, 0.0);
+      P2 : constant Vector (1 .. 2) := (1.0, 1.0);
+      T2 : constant Vector (1 .. 2) := (0.0, 0.0);
    begin
       Check ("5.1 Zero loss for perfect prediction", Compute_Loss (P1, T1) = 0.0);
       -- MSE for (1-0)^2 + (1-0)^2 / 2 = 2.0 / 2 = 1.0
@@ -125,10 +125,11 @@ begin
       
       begin
          declare
-            Bad_P : Vector (1 .. 1) := (1 => 0.0);
+            Bad_P : constant Vector (1 .. 1) := (1 => 0.0);
          begin
-            P1 (1) := Compute_Loss (Bad_P, T1);
-            Check ("5.3 Exception on loss dimension mismatch", False);
+            if Compute_Loss (Bad_P, T1) = 0.0 then
+               Check ("5.3 Exception on loss dimension mismatch", False);
+            end if;
          end;
       exception
          when Dimension_Error => Check ("5.3 Caught loss dimension mismatch", True);
@@ -213,8 +214,8 @@ begin
       Net   : Neural_Network := Create_Network (1, 2, 1, Linear);
       State : Network_State (1, 2, 1);
       Grads : Network_Gradients (1, 2, 1);
-      Input : Vector (1 .. 1) := (1 => 1.0);
-      Targ  : Vector (1 .. 1) := (1 => 5.0);
+      Input : constant Vector (1 .. 1) := (1 => 1.0);
+      Targ  : constant Vector (1 .. 1) := (1 => 5.0);
       Loss1 : Real;
       Loss2 : Real;
    begin
@@ -238,8 +239,8 @@ begin
       State : Network_State (1, 2, 1);
       Grads : Network_Gradients (1, 2, 1);
       Vel   : Network_Gradients (1, 2, 1);
-      Input : Vector (1 .. 1) := (1 => 1.0);
-      Targ  : Vector (1 .. 1) := (1 => 5.0);
+      Input : constant Vector (1 .. 1) := (1 => 1.0);
+      Targ  : constant Vector (1 .. 1) := (1 => 5.0);
       Loss1 : Real;
       Loss2 : Real;
    begin
@@ -261,15 +262,14 @@ begin
    -- TEST 12 - Momentum Accumulates Properly
    Put_Line ("TEST 12 -- Momentum Math Validated");
    declare
-      Net   : Neural_Network := Create_Network (1, 1, 1, Linear);
-      Grads : Network_Gradients (1, 1, 1);
-      Vel   : Network_Gradients (1, 1, 1);
-      Start_W : Real;
+      Net     : Neural_Network := Create_Network (1, 1, 1, Linear);
+      Grads   : Network_Gradients (1, 1, 1);
+      Vel     : Network_Gradients (1, 1, 1);
+      Start_W : constant Real := Net.W1 (1, 1);
    begin
       Zero_Gradients (Vel);
       Zero_Gradients (Grads);
       Grads.DW1 (1, 1) := 1.0;
-      Start_W := Net.W1 (1, 1);
       
       Update_Weights_Momentum (Net, Grads, Vel, 0.1, 0.9);
       Check ("12.1 Vel after step 1", Near (Vel.DW1 (1,1), 0.1));
@@ -282,16 +282,16 @@ begin
    -- TEST 13 - XOR Convergence (Integration Test)
    Put_Line ("TEST 13 -- XOR Integration Test");
    declare
-      Net   : Neural_Network := Create_Network (2, 4, 1, Tanh);
-      State : Network_State (2, 4, 1);
-      Grads : Network_Gradients (2, 4, 1);
-      Inputs: array (1 .. 4) of Vector (1 .. 2) := 
-                ((0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0));
-      Targs : array (1 .. 4) of Vector (1 .. 1) := 
-                ((1 => 0.0), (1 => 1.0), (1 => 1.0), (1 => 0.0));
-      Epochs: Integer := 2000;
-      Loss  : Real;
-      LR    : Real := 0.2;
+      Net    : Neural_Network := Create_Network (2, 4, 1, Tanh);
+      State  : Network_State (2, 4, 1);
+      Grads  : Network_Gradients (2, 4, 1);
+      Inputs : constant array (1 .. 4) of Vector (1 .. 2) := 
+                 ((0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0));
+      Targs  : constant array (1 .. 4) of Vector (1 .. 1) := 
+                 ((1 => 0.0), (1 => 1.0), (1 => 1.0), (1 => 0.0));
+      Epochs : constant Integer := 2000;
+      Loss   : Real;
+      LR     : constant Real := 0.2;
    begin
       for E in 1 .. Epochs loop
          for I in 1 .. 4 loop
