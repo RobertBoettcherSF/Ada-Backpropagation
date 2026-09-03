@@ -212,6 +212,13 @@ package body Backpropagation is
       New_Grads   : Network_Gradients)
    is
    begin
+      if Total_Grads.Inputs /= New_Grads.Inputs 
+        or else Total_Grads.Hiddens /= New_Grads.Hiddens 
+        or else Total_Grads.Outputs /= New_Grads.Outputs 
+      then
+         raise Dimension_Error with "Accumulation gradients dimension mismatch";
+      end if;
+
       for I in 1 .. Total_Grads.Hiddens loop
          Total_Grads.DB1 (I) := Total_Grads.DB1 (I) + New_Grads.DB1 (I);
          for J in 1 .. Total_Grads.Inputs loop
@@ -236,6 +243,13 @@ package body Backpropagation is
       Learning_Rate : Real)
    is
    begin
+      if Net.Inputs /= Grads.Inputs 
+        or else Net.Hiddens /= Grads.Hiddens 
+        or else Net.Outputs /= Grads.Outputs 
+      then
+         raise Dimension_Error with "Network and Gradients dimension mismatch";
+      end if;
+
       for I in 1 .. Net.Hiddens loop
          Net.B1 (I) := Net.B1 (I) - Learning_Rate * Grads.DB1 (I);
          for J in 1 .. Net.Inputs loop
@@ -262,6 +276,13 @@ package body Backpropagation is
       Momentum      : Real)
    is
    begin
+      if Net.Inputs /= Grads.Inputs or else Net.Inputs /= Velocity.Inputs
+        or else Net.Hiddens /= Grads.Hiddens or else Net.Hiddens /= Velocity.Hiddens
+        or else Net.Outputs /= Grads.Outputs or else Net.Outputs /= Velocity.Outputs
+      then
+         raise Dimension_Error with "Network, Gradients, and Velocity dimension mismatch";
+      end if;
+
       -- Update Layer 1
       for I in 1 .. Net.Hiddens loop
          Velocity.DB1 (I) := Momentum * Velocity.DB1 (I) + Learning_Rate * Grads.DB1 (I);
