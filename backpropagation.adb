@@ -142,7 +142,7 @@ package body Backpropagation is
       Grads  : out Network_Gradients)
    is
       DZ2 : Vector (1 .. Net.Outputs);
-      DA1 : Vector (1 .. Net.Hiddens) := (others => 0.0);
+      DA1 : Vector (1 .. Net.Hiddens);
       DZ1 : Vector (1 .. Net.Hiddens);
    begin
       if Target'Length /= Net.Outputs or Target'First /= 1 then
