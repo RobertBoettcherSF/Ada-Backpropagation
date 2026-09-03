@@ -25,7 +25,7 @@ begin
    -- TEST 1 - Network Creation
    Put_Line ("TEST 1 -- Network Creation");
    declare
-      Net : Neural_Network := Create_Network (2, 3, 1, Sigmoid);
+      Net : constant Neural_Network := Create_Network (2, 3, 1, Sigmoid);
    begin
       Check ("1.1 Correct Input size", Net.Inputs = 2);
       Check ("1.2 Correct Hidden size", Net.Hiddens = 3);
@@ -36,10 +36,10 @@ begin
    -- TEST 2 - Forward Input Validation Exception
    Put_Line ("TEST 2 -- Forward Input Validation");
    declare
-      Net        : Neural_Network := Create_Network (2, 3, 1, Linear);
+      Net        : constant Neural_Network := Create_Network (2, 3, 1, Linear);
       State      : Network_State (2, 3, 1);
-      Bad_Input  : constant Vector (1 .. 1) := (1 => 1.0);
-      Good_Input : constant Vector (1 .. 2) := (1.0, 2.0);
+      Bad_Input  : constant Vector (1 .. 1) := [1 => 1.0];
+      Good_Input : constant Vector (1 .. 2) := [1.0, 2.0];
    begin
       begin
          Forward (Net, Bad_Input, State);
@@ -60,13 +60,13 @@ begin
    -- TEST 3 - Backward Target Validation Exception
    Put_Line ("TEST 3 -- Backward Target Validation");
    declare
-      Net    : Neural_Network := Create_Network (1, 2, 1, Linear);
+      Net    : constant Neural_Network := Create_Network (1, 2, 1, Linear);
       State  : Network_State (1, 2, 1);
       Grads  : Network_Gradients (1, 2, 1);
-      Bad_T  : constant Vector (1 .. 2) := (1.0, 1.0);
-      Good_T : constant Vector (1 .. 1) := (1 => 1.0);
+      Bad_T  : constant Vector (1 .. 2) := [1.0, 1.0];
+      Good_T : constant Vector (1 .. 1) := [1 => 1.0];
    begin
-      Forward (Net, (1 => 1.0), State);
+      Forward (Net, [1 => 1.0], State);
       
       begin
          Backward (Net, State, Bad_T, Grads);
@@ -114,10 +114,10 @@ begin
    -- TEST 5 - Compute Loss Correctness
    Put_Line ("TEST 5 -- Compute Loss Correctness");
    declare
-      P1 : constant Vector (1 .. 2) := (1.0, 0.0);
-      T1 : constant Vector (1 .. 2) := (1.0, 0.0);
-      P2 : constant Vector (1 .. 2) := (1.0, 1.0);
-      T2 : constant Vector (1 .. 2) := (0.0, 0.0);
+      P1 : constant Vector (1 .. 2) := [1.0, 0.0];
+      T1 : constant Vector (1 .. 2) := [1.0, 0.0];
+      P2 : constant Vector (1 .. 2) := [1.0, 1.0];
+      T2 : constant Vector (1 .. 2) := [0.0, 0.0];
    begin
       Check ("5.1 Zero loss for perfect prediction", Compute_Loss (P1, T1) = 0.0);
       -- MSE for (1-0)^2 + (1-0)^2 / 2 = 2.0 / 2 = 1.0
@@ -125,7 +125,7 @@ begin
       
       begin
          declare
-            Bad_P : constant Vector (1 .. 1) := (1 => 0.0);
+            Bad_P : constant Vector (1 .. 1) := [1 => 0.0];
          begin
             if Compute_Loss (Bad_P, T1) = 0.0 then
                Check ("5.3 Exception on loss dimension mismatch", False);
@@ -141,8 +141,10 @@ begin
    declare
       Grads : Network_Gradients (2, 2, 2);
    begin
-      Grads.DB1 := (others => 1.0);
-      Grads.DW1 := (others => (others => 1.0));
+      pragma Warnings (Off, "*useless assignment*");
+      Grads.DB1 := [others => 1.0];
+      Grads.DW1 := [others => [others => 1.0]];
+      pragma Warnings (On, "*useless assignment*");
       Zero_Gradients (Grads);
       
       Check ("6.1 Bias gradients are zeroed", Grads.DB1 (1) = 0.0);
@@ -180,13 +182,13 @@ begin
       Net.W1 (1,1) := 1.0; Net.B1 (1) := 0.0;
       Net.W2 (1,1) := 1.0; Net.B2 (1) := 0.0;
       
-      Forward (Net, (1 => -5.0), State);
+      Forward (Net, [1 => -5.0], State);
       Check ("8.1 ReLU cuts off negative input", State.A2 (1) = 0.0);
       
-      Forward (Net, (1 => 5.0), State);
+      Forward (Net, [1 => 5.0], State);
       Check ("8.2 ReLU passes positive input", State.A2 (1) = 5.0);
       
-      Forward (Net, (1 => 0.0), State);
+      Forward (Net, [1 => 0.0], State);
       Check ("8.3 ReLU at zero", State.A2 (1) = 0.0);
    end;
 
@@ -199,11 +201,11 @@ begin
       Net.W1 (1,1) := 2.0; Net.B1 (1) := 0.0;
       Net.W2 (1,1) := 1.0; Net.B2 (1) := 1.0;
       
-      Forward (Net, (1 => -2.0), State);
+      Forward (Net, [1 => -2.0], State);
       -- Z1 = 2*-2 = -4. A1 = -4. Z2 = 1*-4+1 = -3. A2 = -3.
       Check ("9.1 Linear handles negatives", State.A2 (1) = -3.0);
       
-      Forward (Net, (1 => 2.0), State);
+      Forward (Net, [1 => 2.0], State);
       Check ("9.2 Linear handles positives", State.A2 (1) = 5.0);
       Check ("9.3 Internal state verified", State.A1 (1) = 4.0);
    end;
@@ -214,8 +216,8 @@ begin
       Net   : Neural_Network := Create_Network (1, 2, 1, Linear);
       State : Network_State (1, 2, 1);
       Grads : Network_Gradients (1, 2, 1);
-      Input : constant Vector (1 .. 1) := (1 => 1.0);
-      Targ  : constant Vector (1 .. 1) := (1 => 5.0);
+      Input : constant Vector (1 .. 1) := [1 => 1.0];
+      Targ  : constant Vector (1 .. 1) := [1 => 5.0];
       Loss1 : Real;
       Loss2 : Real;
    begin
@@ -239,8 +241,8 @@ begin
       State : Network_State (1, 2, 1);
       Grads : Network_Gradients (1, 2, 1);
       Vel   : Network_Gradients (1, 2, 1);
-      Input : constant Vector (1 .. 1) := (1 => 1.0);
-      Targ  : constant Vector (1 .. 1) := (1 => 5.0);
+      Input : constant Vector (1 .. 1) := [1 => 1.0];
+      Targ  : constant Vector (1 .. 1) := [1 => 5.0];
       Loss1 : Real;
       Loss2 : Real;
    begin
@@ -286,9 +288,9 @@ begin
       State  : Network_State (2, 4, 1);
       Grads  : Network_Gradients (2, 4, 1);
       Inputs : constant array (1 .. 4) of Vector (1 .. 2) := 
-                 ((0.0, 0.0), (0.0, 1.0), (1.0, 0.0), (1.0, 1.0));
+                 [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]];
       Targs  : constant array (1 .. 4) of Vector (1 .. 1) := 
-                 ((1 => 0.0), (1 => 1.0), (1 => 1.0), (1 => 0.0));
+                 [[1 => 0.0], [1 => 1.0], [1 => 1.0], [1 => 0.0]];
       Epochs : constant Integer := 2000;
       Loss   : Real;
       LR     : constant Real := 0.2;
