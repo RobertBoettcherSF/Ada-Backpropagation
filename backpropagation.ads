@@ -1,5 +1,4 @@
 package Backpropagation is
-   pragma Preelaborate;
 
    -- Using a custom floating-point type for strict typing and domain specificity
    type Real is digits 6;
